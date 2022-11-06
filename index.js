@@ -1,4 +1,6 @@
 const { ApolloServer, gql } = require("apollo-server");
+const { uuid } = require("uuidv4");
+
 const {
   ApolloServerPluginLandingPageGraphQLPlayground,
 } = require("apollo-server-core");
@@ -59,11 +61,23 @@ const typeDefs = gql`
   type Query {
     users: [User]
     user(id: ID): User
-    event(id:ID!): Event
+    event(id: ID!): Event
     events: [Event]
+  }
+  type Mutation {
+    createUser(username: String!): User!
+    
   }
 `;
 const resolvers = {
+  Mutation: {
+    createUser: (parent, args) => {
+      const user = { id: uuid(), username: args.username };
+      users.push(user);
+      console.log(users);
+      return user;
+    },
+  },
   Query: {
     users: () => users,
     user: (parent, args) => {
