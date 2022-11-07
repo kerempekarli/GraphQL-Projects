@@ -10,13 +10,13 @@ const users = [
   { id: 2, username: "Ekrem" },
 ];
 const participants = [
-  { id: 1, username: "Kerem123" },
-  { id: 2, username: "Ekrem123" },
+  { id: 1, name: "Kerem123" },
+  { id: 2, name: "Ekrem123" },
 ];
 
 const locations = [
-  { id: 1, username: "Istanbul" },
-  { id: 2, username: "Ankara" },
+  { id: 1, name: "Istanbul" },
+  { id: 2, name: "Ankara" },
 ];
 const events = [
   {
@@ -40,6 +40,13 @@ const typeDefs = gql`
     id: ID
     username: String
   }
+  input createUserInput {
+    username: String!
+  }
+  input updateUserInput {
+    username: String!
+  }
+
   type Participant {
     id: ID
     username: String
@@ -65,17 +72,55 @@ const typeDefs = gql`
     events: [Event]
   }
   type Mutation {
-    createUser(username: String!): User!
-    
+    createUser(data: createUserInput!): User!
+    updateUser(id: ID!, data: updateUserInput!): User!
+    deleteUser(id: ID!): User!
+    createEvent(
+      title: String
+      user_id: ID
+      participant_id: ID
+      location_id: ID
+    ): Event
   }
 `;
 const resolvers = {
   Mutation: {
-    createUser: (parent, args) => {
-      const user = { id: uuid(), username: args.username };
+    createUser: (parent, { data }) => {
+      console.log(data);
+      const user = { id: uuid(), ...data };
       users.push(user);
       console.log(users);
       return user;
+    },
+    updateUser: (parent, { id, data }) => {
+      const user_index = users.findIndex((user) => user.id == id);
+      const updatedUser = (users[user_index] = {
+        ...users[user_index],
+        ...data,
+      });
+      return updatedUser;
+    },
+    deleteUser: (parent, { id }) => {
+      const index = users.findIndex((user) => user.id == id);
+      if (index == -1) {
+        throw new Error("User not found");
+      }
+      const deletedUser = users[index];
+      users.splice(index, 1);
+
+      return deletedUser;
+    },
+    createEvent: (parent, args) => {
+      const event = {
+        id: uuid(),
+        title: args.title,
+        user_id: args.user_id,
+        participant_id: args.participant_id,
+        location_id: args.location_id,
+      };
+      console.log(event);
+      events.push(event);
+      return event;
     },
   },
   Query: {
